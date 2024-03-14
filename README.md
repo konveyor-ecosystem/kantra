@@ -49,8 +49,8 @@ podman pull quay.io/konveyor/kantra:latest && podman run --name kantra-download 
 
 ### Windows
 
-```sh
-podman pull quay.io/konveyor/kantra:latest && podman run --name kantra-download quay.io/konveyor/kantra:latest 1> /dev/null 2> /dev/null && podman cp kantra-download:/usr/local/bin/windows-kantra kantra && podman rm kantra-download
+```powershell
+podman pull quay.io/konveyor/kantra:latest && podman run --name kantra-download quay.io/konveyor/kantra:latest && podman cp kantra-download:/usr/local/bin/windows-kantra kantra.exe && podman rm kantra-download
 ```
 
 ---
