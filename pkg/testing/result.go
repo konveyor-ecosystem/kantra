@@ -49,28 +49,22 @@ func PrintSummary(w io.WriteCloser, results []Result) {
 			rulesSummary.passed += 1
 		}
 	}
+	var rulesSummaryScore float64 = float64(rulesSummary.passed) / float64(rulesSummary.total) * 100
+	var tcSummaryScore float64 = float64(tcSummary.passed) / float64(tcSummary.total) * 100
 	fmt.Fprintln(w, strings.Repeat("-", 60))
-	fmt.Fprintf(w, "  Rules Summary:      %d/%d (%.2f%%) PASSED\n",
-		rulesSummary.passed, rulesSummary.total, float64(rulesSummary.passed)/float64(rulesSummary.total)*100)
-	fmt.Fprintf(w, "  Test Cases Summary: %d/%d (%.2f%%) PASSED\n",
-		tcSummary.passed, tcSummary.total, float64(tcSummary.passed)/float64(tcSummary.total)*100)
+	fmt.Fprintf(w, "  Rules Summary:      %d/%d (%.2f%%) %s\n",
+		rulesSummary.passed, rulesSummary.total, rulesSummaryScore, evaluateStatus(rulesSummaryScore))
+	fmt.Fprintf(w, "  Test Cases Summary: %d/%d (%.2f%%) %s\n",
+		tcSummary.passed, tcSummary.total, tcSummaryScore, evaluateStatus(tcSummaryScore))
 	fmt.Fprintln(w, strings.Repeat("-", 60))
 }
 
 // PrintProgress prints detailed information from given results
 func PrintProgress(w io.WriteCloser, results []Result) {
+	const errorWarn string = "Unexpected error:"
 	// results grouped by their tests files, then rules, then test cases
 	resultsByTestsFile := map[string]map[string][]Result{}
-	errorsByTestsFile := map[string][]string{}
 	for _, result := range results {
-		if result.Error != nil {
-			if _, ok := errorsByTestsFile[result.TestsFilePath]; !ok {
-				errorsByTestsFile[result.TestsFilePath] = []string{}
-			}
-			errorsByTestsFile[result.TestsFilePath] = append(errorsByTestsFile[result.TestsFilePath],
-				result.Error.Error())
-			continue
-		}
 		if _, ok := resultsByTestsFile[result.TestsFilePath]; !ok {
 			resultsByTestsFile[result.TestsFilePath] = map[string][]Result{}
 		}
@@ -82,6 +76,15 @@ func PrintProgress(w io.WriteCloser, results []Result) {
 				resultsByTestsFile[result.TestsFilePath][result.RuleID] = append(
 					resultsByTestsFile[result.TestsFilePath][result.RuleID], result)
 			}
+		} else if !result.Passed {
+			if _, ok := resultsByTestsFile[result.TestsFilePath][errorWarn]; !ok {
+				resultsByTestsFile[result.TestsFilePath][errorWarn] = []Result{}
+			}
+			if len(result.FailureReasons) == 0 {
+				result.FailureReasons = []string{result.Error.Error()}
+			}
+			resultsByTestsFile[result.TestsFilePath][errorWarn] = append(
+				resultsByTestsFile[result.TestsFilePath][errorWarn], result)
 		}
 	}
 	prettyWriter := tabwriter.NewWriter(w, 1, 1, 1, ' ', tabwriter.StripEscape)
@@ -94,7 +97,9 @@ func PrintProgress(w io.WriteCloser, results []Result) {
 			for _, tcResult := range testCases {
 				// only output failed test cases
 				if !tcResult.Passed {
-					tcsResult = fmt.Sprintf("%s    %s\tFAILED\n", tcsResult, tcResult.TestCaseName)
+					if tcResult.TestCaseName != "" {
+						tcsResult = fmt.Sprintf("%s    %s\tFAILED\n", tcsResult, tcResult.TestCaseName)
+					}
 					for _, reason := range tcResult.FailureReasons {
 						tcsResult = fmt.Sprintf("%s    - %s\t\n", tcsResult, reason)
 					}
@@ -128,4 +133,12 @@ func AnyFailed(results []Result) bool {
 		}
 	}
 	return false
+}
+
+func evaluateStatus(score float64) string {
+	if score == 100.0 {
+		return "PASSED"
+	} else {
+		return "FAILED"
+	}
 }
