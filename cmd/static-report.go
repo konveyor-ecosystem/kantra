@@ -85,12 +85,17 @@ func loadApplications(apps []*Application) error {
 		// we don't need them in the report, ignore them
 		for idx := range app.Rulesets {
 			rs := &app.Rulesets[idx]
-			for _, violation := range rs.Violations {
+			for mapKey, violation := range rs.Violations {
 				violation.Extras = nil
 				for idx := range violation.Incidents {
 					inc := &violation.Incidents[idx]
 					inc.Variables = make(map[string]interface{})
+					// Propagate more detailed description to the Violation/display in UI
+					if idx == 0 {
+						violation.Description = fmt.Sprintf("%s\n\n%s", violation.Description, inc.Message)
+					}
 				}
+				rs.Violations[mapKey] = violation
 			}
 		}
 	}
