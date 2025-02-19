@@ -9,6 +9,7 @@ import (
 	"os"
 
 	"github.com/bombsimon/logrusr/v3"
+	"github.com/konveyor-ecosystem/kantra/cmd/asset_generation/discover"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -43,11 +44,18 @@ func init() {
 	logrusLog.SetOutput(os.Stdout)
 	logrusLog.SetFormatter(&logrus.TextFormatter{})
 
+	assertGenerationGroup := cobra.Group{
+		ID:    "assetGeneration",
+		Title: "Asset Generation",
+	}
+	rootCmd.AddGroup(&assertGenerationGroup)
+
 	logger := logrusr.New(logrusLog)
 	rootCmd.AddCommand(NewTransformCommand(logger))
 	rootCmd.AddCommand(NewAnalyzeCmd(logger))
 	rootCmd.AddCommand(NewTestCommand(logger))
 	rootCmd.AddCommand(NewVersionCommand())
+	rootCmd.AddCommand(discover.NewDiscoverCommand(logger))
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
