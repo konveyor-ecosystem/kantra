@@ -123,13 +123,17 @@ podman machine init <vm_name>
 
 ## Usage
 
-Kantra has three subcommands:
+Kantra has five subcommands:
 
 1. _analyze_: This subcommand allows running source code analysis on input source code or a binary.
 
 2. _transform_: This subcommand allows either converting XML rules to YAML or running OpenRewrite recipes on source code.
 
 3. _test_: This subcommand allows testing YAML rules.
+
+4. _discover_: This subcommand allows to discover application and outputs a YAML representation of source platform resources.
+
+5. _generate_: This subcommand allora to analyze the source plaftform and/or application and output a discovery manifest.
 
 ### Analyze
 
@@ -254,6 +258,57 @@ kantra test /path/to/a/single/tests/file.test.yaml
 The output of tests is printed on the console.
 
 See different ways to run the test command in the [test runner doc](./docs/testrunner.md#running-tests)
+
+### Asset Generation
+
+Asset generation consist of two subcommands _discover_ and _generate_.
+
+#### Discover
+Discover application outputs a YAML representation of source platform resources.
+
+To run a discover, run:
+
+`kantra discover --input=<path/to/yaml/manifest>`
+
+_--input_ must point to a yaml manifest file.
+
+
+All flags:
+
+```sh
+Flags:
+  -h, --help             help for discover
+      --list-platforms   List available supported discovery platform.
+```
+
+#### Generate
+
+Analyze the source platform and/or application and output discovery manifest.
+
+
+To generate a discovery manifest, run:
+
+`kantra generate helm --input=<path/to/discover/manifest> --chart-dir=<path/to/helmchart>`
+
+All flags
+
+```sh
+Flags:
+  -h, --help   help for generate
+```
+_generate_ subcommand has a _helm_ subcommand that generates the helm template manifest.
+
+All flags:
+
+```sh
+Flags:
+      --chart-dir string    Directory to the Helm chart to use for chart generation.
+  -h, --help                help for helm
+      --input string        Specifies the discover manifest file
+      --non-k8s-only        Render only the non-Kubernetes templates located in the files/konveyor directory of the chart
+      --output-dir string   Directory to save the generated Helm chart. Defaults to stdout
+      --set stringArray     Set values on the command line (can specify multiple or separate values with commas: key1=val1,key2=val2)
+```
 
 ## References 
 
