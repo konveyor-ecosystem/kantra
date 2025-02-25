@@ -118,13 +118,13 @@ instances: 1
 		filePath string
 	}
 	type flagTest struct {
-		Input                  flagFile
-		Output                 flagFile
-		ExpectSuccess          bool
-		ExpectedOut            string
-		ExpectErr              bool
-		ExpectedErrMessage     string
-		OutputFileVerification bool
+		Input              flagFile
+		Output             flagFile
+		ExpectSuccess      bool
+		ExpectedOut        string
+		ExpectErr          bool
+		ExpectedErrMessage string
+		OutputVerification bool
 	}
 
 	DescribeTable("flag behavior",
@@ -170,11 +170,19 @@ instances: 1
 				Expect(err.String()).To(ContainSubstring(flags.ExpectedErrMessage)) // Check STDERR for errors
 			}
 
-			if flags.OutputFileVerification {
-				outputContent, err := os.ReadFile(outputPath)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(string(outputContent)).To(ContainSubstring(flags.ExpectedOut))
-				Expect(out.String()).To(BeEmpty()) // Standard output should be empty
+			if flags.OutputVerification {
+				var outputContent string
+				if flags.Output.setFlag {
+					outputContentByte, err := os.ReadFile(outputPath)
+					Expect(err).NotTo(HaveOccurred())
+					outputContent = string(outputContentByte)
+					Expect(out.String()).To(BeEmpty()) // Standard output should be empty
+				} else {
+					Expect(out.String()).ToNot(BeEmpty()) // Standard output should not be empty
+					outputContent = out.String()
+				}
+
+				Expect(string(outputContent)).To(Equal(flags.ExpectedOut))
 			} else {
 				Expect(out.String()).To(ContainSubstring(flags.ExpectedOut)) // Check STDOUT for normal output
 			}
@@ -182,52 +190,82 @@ instances: 1
 
 		Entry("discovers manifest and prints output to standard output when flags are valid",
 			flagTest{
-				Input:                  flagFile{setFlag: true},
-				Output:                 flagFile{setFlag: false},
-				ExpectSuccess:          true,
-				ExpectedOut:            "test-app",
-				ExpectErr:              false,
-				ExpectedErrMessage:     "",
-				OutputFileVerification: false},
+				Input:              flagFile{setFlag: true},
+				Output:             flagFile{setFlag: false},
+				ExpectSuccess:      true,
+				ExpectedOut:        "test-app",
+				ExpectErr:          false,
+				ExpectedErrMessage: "",
+				OutputVerification: false},
+		),
+		Entry("discovers manifest and prints output to standard output when flags are valid and verify output",
+			flagTest{
+				Input:         flagFile{setFlag: true},
+				Output:        flagFile{setFlag: false},
+				ExpectSuccess: true,
+				ExpectedOut: `name: test-app
+space: default
+version: "1"
+timeout: 60
+instances: 1
+`,
+				ExpectErr:          false,
+				ExpectedErrMessage: "",
+				OutputVerification: true},
 		),
 
 		Entry("writes to output file when --output flag is given",
 			flagTest{
-				Input:                  flagFile{setFlag: true},
-				Output:                 flagFile{setFlag: true},
-				ExpectSuccess:          true,
-				ExpectedOut:            "",
-				ExpectErr:              false,
-				ExpectedErrMessage:     "",
-				OutputFileVerification: false},
+				Input:              flagFile{setFlag: true},
+				Output:             flagFile{setFlag: true},
+				ExpectSuccess:      true,
+				ExpectedOut:        "",
+				ExpectErr:          false,
+				ExpectedErrMessage: "",
+				OutputVerification: false},
+		),
+		Entry("writes to output file when --output flag is given and verify output",
+			flagTest{
+				Input:         flagFile{setFlag: true},
+				Output:        flagFile{setFlag: true},
+				ExpectSuccess: true,
+				ExpectedOut: `name: test-app
+space: default
+version: "1"
+timeout: 60
+instances: 1
+`,
+				ExpectErr:          false,
+				ExpectedErrMessage: "",
+				OutputVerification: true},
 		),
 		Entry("returns an error when input file is missing",
 			flagTest{
-				Input:                  flagFile{setFlag: false},
-				Output:                 flagFile{setFlag: false},
-				ExpectSuccess:          false,
-				ExpectedOut:            "",
-				ExpectErr:              true,
-				ExpectedErrMessage:     "required flag",
-				OutputFileVerification: false},
+				Input:              flagFile{setFlag: false},
+				Output:             flagFile{setFlag: false},
+				ExpectSuccess:      false,
+				ExpectedOut:        "",
+				ExpectErr:          true,
+				ExpectedErrMessage: "required flag",
+				OutputVerification: false},
 		),
 
 		Entry("returns an error when input file does not exist",
 
 			flagTest{
-				Input:                  flagFile{setFlag: true, filePath: "nonexistent.yaml"},
-				Output:                 flagFile{setFlag: false},
-				ExpectSuccess:          false,
-				ExpectedOut:            "",
-				ExpectErr:              true,
-				ExpectedErrMessage:     "no such file or directory",
-				OutputFileVerification: false},
+				Input:              flagFile{setFlag: true, filePath: "nonexistent.yaml"},
+				Output:             flagFile{setFlag: false},
+				ExpectSuccess:      false,
+				ExpectedOut:        "",
+				ExpectErr:          true,
+				ExpectedErrMessage: "no such file or directory",
+				OutputVerification: false},
 		),
 	)
 })
 
-func helperCreateTestManifest(manifestPAth string, content string, perm os.FileMode) error {
-	err := os.WriteFile(manifestPAth, []byte(content), perm) //0644
+func helperCreateTestManifest(manifestPath string, content string, perm os.FileMode) error {
+	err := os.WriteFile(manifestPath, []byte(content), perm) //0644
 	if err != nil {
 		return err
 	}

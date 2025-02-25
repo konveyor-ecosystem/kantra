@@ -66,7 +66,7 @@ func discoverManifest(writer io.Writer) error {
 
 	}
 	if output == "" {
-		fmt.Fprintf(writer, "%s\n", b)
+		fmt.Fprintf(writer, "%s", b)
 		return nil
 	}
 	return os.WriteFile(output, b, 0444)
