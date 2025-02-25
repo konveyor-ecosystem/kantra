@@ -44,10 +44,10 @@ var _ = Describe("Discover Manifest", func() {
 			err = discoverManifest(writer)
 			writer.Flush()
 			if expectedErrorMessage != "" {
-				Expect(err).ToNot(BeNil(), "Expected an error due to invalid manifest content, got none")
+				Expect(err).To(HaveOccurred(), "Expected an error due to invalid manifest content, got none")
 				Expect(err.Error()).To(ContainSubstring(expectedErrorMessage))
 			} else {
-				Expect(err).To(BeNil(), "Expected no error for invalid manifest, but got one")
+				Expect(err).ToNot(HaveOccurred(), "Expected no error for invalid manifest, but got one")
 			}
 		},
 		Entry("with an empty manifest", "", "field validation for 'Name' failed on the 'required' tag"),
@@ -62,10 +62,10 @@ var _ = Describe("Discover Manifest", func() {
 
 			err = discoverManifest(writer)
 			if expectedErrorMessage != "" {
-				Expect(err).ToNot(BeNil(), "Expected an error due to invalid manifest content, got none")
+				Expect(err).ToNot(HaveOccurred(), "Expected an error due to invalid manifest content, got none")
 				Expect(err.Error()).To(ContainSubstring(expectedErrorMessage))
 			} else {
-				Expect(err).To(BeNil(), "Expected no error for valid manifest, but got one")
+				Expect(err).ToNot(HaveOccurred(), "Expected no error for valid manifest, but got one")
 			}
 		},
 		Entry("with readonly permission", `name: test-app`, os.FileMode(0444), ""),
