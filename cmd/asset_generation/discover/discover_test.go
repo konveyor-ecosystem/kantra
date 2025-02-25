@@ -19,12 +19,11 @@ var _ = Describe("Discover Command", func() {
 			logger logr.Logger
 			out    bytes.Buffer
 			err    bytes.Buffer
-			writer *bufio.Writer = bufio.NewWriter(&out)
+			writer *bufio.Writer
 			c      *cobra.Command
 		)
 		BeforeEach(func() {
-			// Reset buffers before each test
-			writer.Reset(&out)
+			writer = bufio.NewWriter(&out)
 
 			// Set up logger
 			logrusLog := logrus.StandardLogger()

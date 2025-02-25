@@ -78,7 +78,7 @@ var _ = Describe("Discover command", func() {
 		log    logr.Logger
 		out    bytes.Buffer
 		err    bytes.Buffer
-		writer *bufio.Writer = bufio.NewWriter(&out)
+		writer *bufio.Writer
 
 		tempDir         string
 		cmd             *cobra.Command
@@ -89,9 +89,9 @@ var _ = Describe("Discover command", func() {
 
 	BeforeEach(func() {
 		log = logr.Discard()
-
-		// Reset buffers before each test
-		writer.Reset(&out)
+		out.Reset()
+		err.Reset()
+		writer = bufio.NewWriter(&out)
 
 		// Create a temporary directory for test files
 		tempDir, err := os.MkdirTemp("", "cloud_foundry_test")
