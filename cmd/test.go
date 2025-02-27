@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/go-logr/logr"
@@ -33,7 +34,7 @@ func NewTestCommand(log logr.Logger) *cobra.Command {
 				log.Info("no tests found")
 				return nil
 			}
-			results, err := testing.NewRunner().Run(tests, testing.TestOptions{
+			results, allPass, err := testing.NewRunner().Run(tests, testing.TestOptions{
 				RunLocal:         Settings.RunLocal,
 				ContainerImage:   Settings.RunnerImage,
 				ContainerToolBin: Settings.ContainerBinary,
@@ -44,6 +45,9 @@ func NewTestCommand(log logr.Logger) *cobra.Command {
 			if err != nil {
 				log.Error(err, "failed running tests")
 				return err
+			}
+			if !allPass {
+				return fmt.Errorf("one or more tests failed")
 			}
 			return nil
 		},

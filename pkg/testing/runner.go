@@ -24,7 +24,7 @@ import (
 // Runner given a list of TestsFile and a TestOptions
 // runs the tests, computes and returns results
 type Runner interface {
-	Run([]TestsFile, TestOptions) ([]Result, error)
+	Run([]TestsFile, TestOptions) ([]Result, bool, error)
 }
 
 type TestOptions struct {
@@ -130,7 +130,7 @@ func NewRunner() Runner {
 // groups tests within a file by analysisParams
 type defaultRunner struct{}
 
-func (r defaultRunner) Run(testFiles []TestsFile, opts TestOptions) ([]Result, error) {
+func (r defaultRunner) Run(testFiles []TestsFile, opts TestOptions) ([]Result, bool, error) {
 	if opts.Log.GetSink() == nil {
 		opts.Log = logr.Discard()
 	}
@@ -284,12 +284,12 @@ func (r defaultRunner) Run(testFiles []TestsFile, opts TestOptions) ([]Result, e
 	})
 
 	if anyErrored {
-		return allResults, fmt.Errorf("failed to execute one or more tests")
+		return allResults, false, fmt.Errorf("failed to execute one or more tests")
 	}
 	if anyFailed {
-		return allResults, fmt.Errorf("one or more tests failed")
+		return allResults, false, fmt.Errorf("one or more tests failed")
 	}
-	return allResults, nil
+	return allResults, true, nil
 }
 
 func runLocal(logFile io.Writer, dir string, analysisParams AnalysisParams) (string, error) {
