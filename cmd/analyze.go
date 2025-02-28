@@ -1323,8 +1323,13 @@ func (a *analyzeCommand) moveResults() error {
 	if err != nil {
 		return err
 	}
-	err = CopyFileContents(depsPath, fmt.Sprintf("%s.%s", depsPath, a.inputShortName()))
-	if err == nil { // dependencies file presence is optional
+	// dependencies.yaml is optional
+	_, noDepFileErr := os.Stat(depsPath)
+	if noDepFileErr == nil {
+		err = CopyFileContents(depsPath, fmt.Sprintf("%s.%s", depsPath, a.inputShortName()))
+		if err != nil {
+			return err
+		}
 		err = os.Remove(depsPath)
 		if err != nil {
 			return err
